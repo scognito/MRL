@@ -33,6 +33,11 @@ rotheadMax = 160 # dx
 rotheadRest = 95
 
 # VELOCITY
+
+VELOCITY_NORMAL = 3
+VELOCITY_MAX = 1
+velocity_pad = VELOCITY_NORMAL
+
 eyeXvelocity = 100 # -1 full speed
 eyeYvelocity = 100
 neckVelocity = 45
@@ -77,13 +82,13 @@ xrh = 0 # head direction X
 yrh = 0 # head direction Y
 xeye = 0 # eyes direction X
 yeye = 0 # eyes direction Y
-headSteps = 1 # step each move
-eyesSteps = 3
+headSteps = 5 # step each move
+eyesSteps = 5
 # JOYSTICK END
 
 class servoThread (Thread):
 
-	global xHeadMovingWithPad, xHeadMovingWithPad, xEyesMovingWithPad, yEyesMovingWithPad, xrh, yrh, xeye, yeye, head
+	global xHeadMovingWithPad, xHeadMovingWithPad, xEyesMovingWithPad, yEyesMovingWithPad, xrh, yrh, xeye, yeye, head, velocity_pad
    
 	def __init__(self, name):
 		Thread.__init__(self)
@@ -93,13 +98,13 @@ class servoThread (Thread):
 		while(True):
 			time.sleep(0.1)
 			if(xHeadMovingWithPad):
-				head.rothead.moveTo(head.rothead.pos + xrh)
+				head.rothead.moveTo(head.rothead.pos + (xrh * velocity_pad))
 			if(yHeadMovingWithPad):
-				head.neck.moveTo(head.neck.pos + yrh)
+				head.neck.moveTo(head.neck.pos + (yrh * velocity_pad))
 			if(xEyesMovingWithPad):
-				head.eyeX.moveTo(head.eyeX.pos + xeye)
+				head.eyeX.moveTo(head.eyeX.pos + (xeye * velocity_pad))
 			if(yEyesMovingWithPad):
-				head.eyeY.moveTo(head.eyeY.pos + yeye)
+				head.eyeY.moveTo(head.eyeY.pos + (yeye * velocity_pad))
 				
 threadServo = servoThread("Joystick Thread")
 threadServo.start()
@@ -108,6 +113,7 @@ threadServo.start()
 head = Runtime.create("i01.head","InMoovHead")
 
 def normalVelocity():
+	velocity_pad = VELOCITY_NORMAL
 	head.eyeX.setVelocity(eyeXvelocity)
 	head.eyeY.setVelocity(eyeYvelocity)
 	head.neck.setVelocity(neckVelocity)
@@ -237,6 +243,7 @@ def onRecognized(text):
 		test123()	
 
 def maxVelocity():
+	velocity_pad = VELOCITY_MAX
 	head.eyeX.setVelocity(-1)
 	head.eyeY.setVelocity(-1)
 	head.neck.setVelocity(-1)
@@ -393,12 +400,12 @@ def StickYListener(value):
 			return
   
 	if (value >= deltaPad):
-		print "NECK DOWN"
+		#print "NECK DOWN"
 		yHeadMovingWithPad = True;
 		yrh = -headSteps
 	
 	if (value <= -deltaPad):
-		print "NECK UP"
+		#print "NECK UP"
 		yHeadMovingWithPad = True;
 		yrh = +headSteps
 
@@ -411,7 +418,7 @@ def StickRXListener(value):
   
 	if (absValue < deltaPad):
 		if(xEyesMovingWithPad == True):
-			print "Stop"
+			#print "Stop"
 			xEyesMovingWithPad = False
 			xeye = 0
 			head.eyeX.stop()
@@ -434,7 +441,7 @@ def StickRYListener(value):
   
 	if (absValue < deltaPad):
 		if(yEyesMovingWithPad == True):
-			print "Stop"
+			#print "Stop"
 			yEyesMovingWithPad = False
 			yeye = 0
 			head.eyeY.stop()
