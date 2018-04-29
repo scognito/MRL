@@ -33,7 +33,7 @@ head.rothead.setSpeedControlOnUC(False)
 i01.startHead(leftPort)
 i01.head.rothead.attach(left, pinRothead)
 
-#i01.head.rothead.setSpeedControlOnUC(False)
+i01.head.rothead.setSpeedControlOnUC(False)
 
 def StickXListener(value):
   print "Stick X :" + str(value) + " Current pos: " + str(i01.head.rothead.pos)
