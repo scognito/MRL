@@ -69,46 +69,12 @@ WebGui.startService()
 # JOYSTICK START
 uberjoy = Runtime.createAndStart("joy", "Joystick")
 uberjoy.setController(joystickIndex)
-uberjoy.addInputListener(python)
+uberjoy.startPolling()
 
-xHeadMovingWithPad = False
-yHeadMovingWithPad = False
-xEyesMovingWithPad = False
-yEyesMovingWithPad = False
+joyThreshold = 0.2
+joyGain = 100
 
-deltaPad = 0.500
-
-xrh = 0 # head direction X
-yrh = 0 # head direction Y
-xeye = 0 # eyes direction X
-yeye = 0 # eyes direction Y
-headSteps = 5 # step each move
-eyesSteps = 5
 # JOYSTICK END
-
-class servoThread (Thread):
-
-	global xHeadMovingWithPad, xHeadMovingWithPad, xEyesMovingWithPad, yEyesMovingWithPad, xrh, yrh, xeye, yeye, head, velocity_pad
-   
-	def __init__(self, name):
-		Thread.__init__(self)
-		self.name = name
-		
-	def run(self):
-		while(True):
-			time.sleep(0.1)
-			if(xHeadMovingWithPad):
-				head.rothead.moveTo(head.rothead.pos + (xrh * velocity_pad))
-			if(yHeadMovingWithPad):
-				head.neck.moveTo(head.neck.pos + (yrh * velocity_pad))
-			if(xEyesMovingWithPad):
-				head.eyeX.moveTo(head.eyeX.pos + (xeye * velocity_pad))
-			if(yEyesMovingWithPad):
-				head.eyeY.moveTo(head.eyeY.pos + (yeye * velocity_pad))
-				
-threadServo = servoThread("Joystick Thread")
-threadServo.start()
-# END JOYSTICK
 
 head = Runtime.create("i01.head","InMoovHead")
 
@@ -157,6 +123,9 @@ i01.headTracking.pid.setPID("neck", 10.0, 1.0, 0.1)
 #i01.headTracking.pid.setPID("neck", 5.0, 1.0, 0.1)
 
 head.setAutoDisable(True)
+i01.head.rothead.setAutoDisable(True);
+i01.head.neck.setAutoDisable(True);
+
 python.subscribe("i01.ear","recognized") #FIX
 ear = i01.ear
 ear.setLanguage("it-IT")
@@ -239,6 +208,8 @@ def onRecognized(text):
 		sayTime()
 	elif (text.startswith("ripeti")):
 		repeat(text)
+	elif (text == u"come ti chiami"):
+		mouth.speak("mi chiamo Querti")
 	elif (text == u"prova"):
 		test123()	
 
@@ -364,97 +335,82 @@ def repeat(text):
 # LEFT STICK: HEAD L/R
 def StickXListener(value):
 
-	global deltaPad, xHeadMovingWithPad, xrh, headSteps
+	global joyThreshold, joyGain, i01
 	
 	absValue = math.fabs(value)
-  
-	if (absValue < deltaPad):
-		if(xHeadMovingWithPad == True):
-			print "Stop"
-			xHeadMovingWithPad = False
-			xrh = 0
-			head.rothead.stop()
-			return
-  
-	if (value >= deltaPad):
-		xHeadMovingWithPad = True;
-		xrh = headSteps
 	
-	if (value <= -deltaPad):
-		xHeadMovingWithPad = True;
-		xrh = -headSteps
+	if (absValue < joyThreshold):
+		i01.head.rothead.setVelocity(0)
+		i01.head.rothead.moveTo(i01.head.rothead.pos)
+		return
+	else:
+		velocity = absValue * joyGain
+		i01.head.rothead.setVelocity(velocity)
+		if(value < 0):
+			i01.head.rothead.moveTo(i01.head.rothead.min)
+		else:
+			i01.head.rothead.moveTo(i01.head.rothead.max)
+		return;
 
 # LEFT STICK: HEAD U/D
 def StickYListener(value):
 
-	global deltaPad, yHeadMovingWithPad, yrh, headSteps
+	global joyThreshold, joyGain, i01
 	
 	absValue = math.fabs(value)
-  
-	if (absValue < deltaPad):
-		if(yHeadMovingWithPad == True):
-			print "Stop"
-			yHeadMovingWithPad = False
-			yrh = 0
-			head.neck.stop()
-			return
-  
-	if (value >= deltaPad):
-		#print "NECK DOWN"
-		yHeadMovingWithPad = True;
-		yrh = -headSteps
 	
-	if (value <= -deltaPad):
-		#print "NECK UP"
-		yHeadMovingWithPad = True;
-		yrh = +headSteps
+	if (absValue < joyThreshold):
+		i01.head.neck.setVelocity(0)
+		i01.head.neck.moveTo(i01.head.neck.pos)
+		return
+	else:
+		velocity = absValue * joyGain
+		i01.head.neck.setVelocity(velocity)
+		if(value < 0):
+			i01.head.neck.moveTo(i01.head.neck.max)
+		else:
+			i01.head.neck.moveTo(i01.head.neck.min)
+		return;
 
 # RIGHT STICK: EYES L/R
 def StickRXListener(value):
-
-	global deltaPad, xEyesMovingWithPad, xeye, eyesSteps
+	global joyThreshold, joyGain, i01
 	
 	absValue = math.fabs(value)
-  
-	if (absValue < deltaPad):
-		if(xEyesMovingWithPad == True):
-			#print "Stop"
-			xEyesMovingWithPad = False
-			xeye = 0
-			head.eyeX.stop()
-			return
-  
-	if (value >= deltaPad):
-		xEyesMovingWithPad = True;
-		xeye = -eyesSteps
 	
-	if (value <= -deltaPad):
-		xEyesMovingWithPad = True;
-		xeye = eyesSteps
+	if (absValue < joyThreshold):
+		i01.head.eyeX.setVelocity(0)
+		i01.head.eyeX.moveTo(i01.head.eyeX.pos)
+		return
+	else:
+		velocity = absValue * joyGain
+		i01.head.eyeX.setVelocity(velocity)
+		if(value < 0):
+			i01.head.eyeX.moveTo(i01.head.eyeX.max)
+		else:
+			i01.head.eyeX.moveTo(i01.head.eyeX.min)
+		return;
 
 # RIGHT STICK: EYES U/D
 def StickRYListener(value):
-
-	global deltaPad, yEyesMovingWithPad, yeye, eyesSteps
+	
+	global joyThreshold, joyGain, i01
 	
 	absValue = math.fabs(value)
-  
-	if (absValue < deltaPad):
-		if(yEyesMovingWithPad == True):
-			#print "Stop"
-			yEyesMovingWithPad = False
-			yeye = 0
-			head.eyeY.stop()
-			return
-  
-	if (value >= deltaPad):
-		yEyesMovingWithPad = True;
-		yeye = eyesSteps
 	
-	if (value <= -deltaPad):
-		yEyesMovingWithPad = True;
-		yeye = -eyesSteps
-		
+	if (absValue < joyThreshold):
+		i01.head.eyeY.setVelocity(0)
+		i01.head.eyeY.moveTo(i01.head.eyeY.pos)
+		return
+	else:
+		velocity = absValue * joyGain
+		i01.head.eyeY.setVelocity(velocity)
+		if(value < 0):
+			i01.head.eyeY.moveTo(i01.head.eyeY.min)
+		else:
+			i01.head.eyeY.moveTo(i01.head.eyeY.max)
+		return;
+
 def onJoystickInput(data):
 
 	global xrh
@@ -497,6 +453,8 @@ def onJoystickInput(data):
 	# R TRIGGER
 	if (data.id == '5' and float(data.value) == 1.0):
 		stopTracking()
+
+uberjoy.addInputListener(python)
 # END JOYSTICK
 
 #	i01.setHeadVelocity(40, 40, 40)
