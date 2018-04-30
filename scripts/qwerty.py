@@ -171,46 +171,46 @@ relax()
 # ear.addCommand("silenzio", "python", "stopMp3")
 
 def onRecognized(text):
-	if (text == u"riposo" or text == u"riposa"):
+	if (text == u"riposo" or text == u"riposa"): # relax
 		relax()
-	elif (text == u"guarda a destra"):
+	elif (text == u"guarda a destra"): # look right
 		lookRight()
-	elif (text == u"guarda a sinistra"):
+	elif (text == u"guarda a sinistra"): # look left
 		lookLeft()
-	elif (text == u"guarda in alto" or text == u"alza lo sguardo"):
+	elif (text == u"guarda in alto" or text == u"alza lo sguardo"): # look up
 		lookUp()
-	elif (text == u"guarda in basso" or text == u"abbassa lo sguardo"):
+	elif (text == u"guarda in basso" or text == u"abbassa lo sguardo"): # look down
 		lookDown()
-	elif (text == u"apri la bocca"):
+	elif (text == u"apri la bocca"): # open mouth
 		openMouth()
-	elif (text == u"chiudi la bocca"):
+	elif (text == u"chiudi la bocca"): # close mouth
 		closeMouth()
-	elif (text == u"gira a destra" or text == u"gira la testa a destra"):
+	elif (text == u"gira a destra" or text == u"gira la testa a destra"): # turn head right
 		rotateRight()
-	elif (text == u"gira a sinistra" or text == u"gira la testa a sinistra"):
+	elif (text == u"gira a sinistra" or text == u"gira la testa a sinistra"): # turn head left
 		rotateLeft()
-	elif (text == u"alza la testa"):
+	elif (text == u"alza la testa"): # head up
 		headUp()
-	elif (text == u"abbassa la testa"):
+	elif (text == u"abbassa la testa"): # head down
 		headDown()
-	elif (text == u"suca"):
+	elif (text == u"suca"): # fuck
 		suca()
-	elif (text == u"traccia"):
+	elif (text == u"traccia"): # start tracking (object tracking)
 		#startHumanTracking()
 		startLKTracking()
-	elif (text == u"non tracciare"):
+	elif (text == u"non tracciare"): # stop tracking
 		stopTracking()
-	elif (text == u"musica"):
+	elif (text == u"musica"): # play music
 		startMp3()
-	elif (text == u"silenzio"):
+	elif (text == u"silenzio"): # shut up (stop playing music)
 		stopMp3()
-	elif (text == u"che ore sono"):
+	elif (text == u"che ore sono"): # what time is it
 		sayTime()
-	elif (text.startswith("ripeti")):
+	elif (text.startswith("ripeti")): # say
 		repeat(text)
-	elif (text == u"come ti chiami"):
+	elif (text == u"come ti chiami"): # what's your name
 		mouth.speak("mi chiamo Querti")
-	elif (text == u"prova"):
+	elif (text == u"prova"): # test
 		test123()	
 
 def maxVelocity():
