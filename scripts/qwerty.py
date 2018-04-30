@@ -71,7 +71,7 @@ uberjoy = Runtime.createAndStart("joy", "Joystick")
 uberjoy.setController(joystickIndex)
 uberjoy.startPolling()
 
-joyThreshold = 0.2
+joyThreshold = 0.5
 joyGain = 100
 
 # JOYSTICK END
@@ -440,7 +440,6 @@ def onJoystickInput(data):
 		print ("Values min: ", head.rothead.min)
 		print ("Values max: ", head.rothead.max)
 		print ("Values pos: ", head.rothead.pos)
-		print ("Values xrh: ", xrh)
 
 	# SQUARE
 	if (data.id == '2' and float(data.value) == 1.0):
