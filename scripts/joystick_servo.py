@@ -3,9 +3,10 @@
 
 import math
 
-leftPort = "COM5"
+#leftPort = "COM5"
+leftPort = "/dev/ttyACM0"
 
-joystickIndex = 2; # check the index in the joy tab once running
+joystickIndex = 0; # check the index in the joy tab once running
 
 # PIN
 pinNeck = 12
@@ -92,13 +93,13 @@ def leftStickXYListener(axis, value):
 			head.neck.setVelocity(headVelocity)
 			
     		# set the direction of the movement
-		if (value < 0):
+		if(value < 0):
 			if(axis == "x"):
 				head.rothead.moveTo(head.rothead.min)
 			else:
 				head.neck.moveTo(head.neck.max)
     		else:
-    			if(axis == "x"):
+	    		if(axis == "x"):
 				head.rothead.moveTo(head.rothead.max)
 			else:
 				head.neck.moveTo(head.neck.min)
@@ -161,7 +162,7 @@ def onJoystickInput(data):
 		rightStickXYListener("y", data.value)
 
 	# CIRCLE button
-	if (data.id == '1' and float(data.value) == 1.0):
+	if ((data.id == '1' or data.id == 'A') and float(data.value) == 1.0):
 		disableServos()
 		
 uberjoy.addInputListener(python)
