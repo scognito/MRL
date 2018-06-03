@@ -3,6 +3,8 @@
 
 import math
 
+#execfile('/home/scognito/dev/git/MRL/scripts/joystick_servo.py')
+
 #leftPort = "COM5"
 leftPort = "/dev/ttyACM0"
 
@@ -92,14 +94,14 @@ def leftStickXYListener(axis, value):
 			#print "D ****"
 			head.neck.setVelocity(headVelocity)
 			
-    		# set the direction of the movement
+			# set the direction of the movement
 		if(value < 0):
 			if(axis == "x"):
 				head.rothead.moveTo(head.rothead.min)
 			else:
 				head.neck.moveTo(head.neck.max)
-    		else:
-	    		if(axis == "x"):
+		else:
+			if(axis == "x"):
 				head.rothead.moveTo(head.rothead.max)
 			else:
 				head.neck.moveTo(head.neck.min)
@@ -127,14 +129,14 @@ def rightStickXYListener(axis, value):
 		else:
 			head.eyeY.setVelocity(headVelocity)
 			
-    		# set the direction of the movement
+		# set the direction of the movement
 		if (value > 0):
 			if(axis == "x"):
 				head.eyeX.moveTo(head.eyeX.min)
 			else:
 				head.eyeY.moveTo(head.eyeY.max)
-    		else:
-    			if(axis == "x"):
+		else:
+			if(axis == "x"):
 				head.eyeX.moveTo(head.eyeX.max)
 			else:
 				head.eyeY.moveTo(head.eyeY.min)
