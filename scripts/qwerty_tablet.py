@@ -1,36 +1,27 @@
-# Thanks to kwatters
-# https://github.com/MyRobotLab/pyrobotlab/blob/develop/home/kwatters/joystick_manticore.py
-
 import time, math
 from random import randint
 from datetime import datetime
+from threading import Thread
+
+# execfile('/home/scognito/dev/git/MRL/scripts/qwerty_tablet.py')
 
 song1Path = "/home/scognito/Music/blink.mp3";
 song2Path = "/home/scognito/Music/amy.mp3";
 song3Path = "/home/scognito/Music/ramones.mp3";
 song4Path = "/home/scognito/Music/sultan.mp3";
 
-#leftPort = "COM5"
 leftPort = "/dev/ttyACM0"
 
-joystickIndex = 0; # check the index in the joy tab once running
+joystickIndex = 0;
 
 # PIN
-pinNeck = 12
-pinRothead = 13
 pinEyeX = 22
 pinEyeY = 24
+pinNeck = 12
+pinRothead = 13
 pinJaw = 26
 
-# MIN / MAX FOR MAPPING
-rotheadMin = 30  # left
-rotheadMax = 160 # right
-rotheadRest = 95
-
-neckMin = 10
-neckMax = 130
-neckRest = 90
-
+# RANGE MIN MAX
 eyeXmin = 60  # left
 eyeXmax = 120 # right
 eyeXrest = 90
@@ -39,8 +30,22 @@ eyeYmin = 100
 eyeYmax = 140
 eyeYrest = 115
 
+neckMin = 10
+neckMax = 130
+neckRest = 90
+
 jawMin = 0
 jawMax = 30
+
+rotheadMin = 30  # sx
+rotheadMax = 160 # dx
+rotheadRest = 95
+
+# VELOCITY
+eyeXvelocity = 100 # -1 full speed
+eyeYvelocity = 100
+neckVelocity = 45
+rotheadVelocity = 45
 
 headVelocity = 45
 eyesVelocity = 45
@@ -54,81 +59,71 @@ voice="istc-lucia-hsmm"
 maxSongs = 4
 curSong = 0
 
-# MAIN
-i01 = Runtime.create("i01", "InMoov")
-
-left = Runtime.createAndStart("i01.left", "Arduino")
-left.connect(leftPort)
-
 mouth = Runtime.createAndStart("i01.mouth", "MarySpeech")
+#mouth = Runtime.createAndStart("i01.mouth", "NaturalReaderSpeech")
 mouth.setVoice(voice)
 
 playAudio = Runtime.createAndStart("i01.playAudio", "NaturalReaderSpeech")
 
-# EAR
+i01 = Runtime.create("i01", "InMoov")
+
+left = Runtime.createAndStart("i01.left", "Arduino")
+left.connect(leftPort)
 i01.startEar()
-python.subscribe("i01.ear","recognized") #FIX
-ear = i01.ear
-ear.setLanguage("it-IT")
-ear.startListening()
 
 WebGui = Runtime.create("WebGui","WebGui")
 WebGui.autoStartBrowser(False)
 WebGui.startService()
 #WebGui.startBrowser("http://localhost:8888/#/service/i01.ear")
 
-# JOYSTICK
+# JOYSTICK START
 uberjoy = Runtime.createAndStart("joy", "Joystick")
 uberjoy.setController(joystickIndex)
-uberjoy.startPolling()
+uberjoy.addInputListener(python)
 
 head = Runtime.create("i01.head","InMoovHead")
 
 # MAPPING
-head.neck.map(0, 180, neckMin, neckMax)
-head.rothead.map(0, 180, rotheadMin, rotheadMax)
 head.eyeX.map(0, 180, eyeXmin, eyeXmax)
 head.eyeY.map(0, 180, eyeYmin, eyeYmax)
+head.neck.map(0, 180, neckMin, neckMax)
 head.jaw.map(0, 180, jawMin, jawMax)
+head.rothead.map(0, 180, rotheadMin, rotheadMax)
 
-# SPEED
-head.rothead.setVelocity(headVelocity)
-head.neck.setVelocity(headVelocity)
-head.eyeX.setVelocity(headVelocity)
-head.eyeY.setVelocity(headVelocity)
-
-# SET AUTODISABLE
-#head.rothead.setAutoDisable(True);
-#head.neck.setAutoDisable(True);
-#head.eyeX.setAutoDisable(True);
-#head.eyeY.setAutoDisable(True);
+# REST
+head.eyeX.setRest(eyeXrest)
+head.eyeY.setRest(eyeYrest)
+head.rothead.setRest(rotheadRest);
 
 i01.startHead(leftPort)
-i01.head.rothead.attach(left, pinRothead)
-i01.head.neck.attach(left, pinNeck)
+
 i01.head.eyeX.attach(left, pinEyeX)
 i01.head.eyeY.attach(left, pinEyeY)
+i01.head.rothead.attach(left, pinRothead)
+i01.head.neck.attach(left, pinNeck)
 i01.head.jaw.attach(left, pinJaw)
 
 i01.startMouthControl(leftPort)
 i01.mouthControl.setmouth(0, 180) # fa aprire e chiudere la bocca quando parla
 
-def normalVelocity():
-	head.eyeX.setVelocity(eyesVelocity)
-	head.eyeY.setVelocity(eyesVelocity)
-	head.neck.setVelocity(headVelocity)
-	head.rothead.setVelocity(headVelocity)
+head.setAutoDisable(True)
+python.subscribe("i01.ear","recognized") #FIX
+ear = i01.ear
+ear.setLanguage("it-IT")
+ear.startListening()
 
 def relax():
-	#i01.mouth.speak("vafanculo coglione")
-	#normalVelocity()
 	playAudio.audioFile.silence()
-	#stopTracking()
-	#i01.head.eyeX.moveTo(eyeXrest)
-	#i01.head.eyeY.moveTo(eyeYrest)
-	i01.head.neck.moveTo(0)
+	#i01.mouth.speak("va bene.")
+	i01.head.eyeX.moveTo(eyeXrest)
+	i01.head.eyeY.moveTo(eyeYrest)
+	i01.head.neck.moveTo(neckRest)
+	i01.head.rothead.moveTo(rotheadRest)
+	i01.head.jaw.moveTo(0)
+
 	#i01.head.rothead.moveTo(rotheadRest)
-	#i01.head.jaw.moveTo(0)
+	
+relax()
 
 # FIX
 # ear.setLanguage("it-IT")
@@ -149,6 +144,40 @@ def relax():
 # ear.addCommand("musica", "python", "startMp3")
 # ear.addCommand("silenzio", "python", "stopMp3")
 
+def onRecognized(text):
+	if (text == u"riposo" or text == u"riposa"):
+		relax()
+	elif (text == u"guarda a destra"):
+		lookRight()
+	elif (text == u"guarda a sinistra"):
+		lookLeft()
+	elif (text == u"guarda in alto" or text == u"alza lo sguardo"):
+		lookUp()
+	elif (text == u"guarda in basso" or text == u"abbassa lo sguardo"):
+		lookDown()
+	elif (text == u"apri la bocca"):
+		openMouth()
+	elif (text == u"chiudi la bocca"):
+		closeMouth()
+	elif (text == u"gira a destra" or text == u"gira la testa a destra"):
+		rotateRight()
+	elif (text == u"gira a sinistra" or text == u"gira la testa a sinistra"):
+		rotateLeft()
+	elif (text == u"alza la testa"):
+		headUp()
+	elif (text == u"abbassa la testa"):
+		headDown()
+	elif (text == u"suca"):
+		suca()
+	elif (text == u"musica"):
+		startMp3()
+	elif (text == u"silenzio"):
+		stopMp3()
+	elif (text == u"che ore sono"):
+		sayTime()
+	elif (text.startswith("ripeti")):
+		repeat(text)
+	
 def startMp3():
 	playAudio.audioFile.silence()
 	time.sleep(1)
@@ -164,61 +193,57 @@ def startMp3():
 		playAudio.audioFile.playFile(song1Path, False)
 	elif (curSong == 1):
 		mouth.speakBlocking("Riproduco emi uainaus")
-		playAudio.audioFile.playFile("song2Path", False)
+		playAudio.audioFile.playFile(song2Path, False)
 	elif (curSong == 2):
 		mouth.speakBlocking("Riproduco i ramones")
-		playAudio.audioFile.playFile("song3path", False)
+		playAudio.audioFile.playFile(song3Path, False)
 	elif (curSong == 3):
 		mouth.speakBlocking("Riproduco i dair streits")
-		playAudio.audioFile.playFile("song4path", False)
+		playAudio.audioFile.playFile(song4Path, False)
+
+	curSong = curSong+1
+#	audioFile = Runtime.createAndStart("af1", "AudioFile");
+#	audioFile.playFile("my.mp3" False); # autostart
 
 def stopMp3():
 	playAudio.audioFile.silence()
-
+    
 def rotateRight():
-	normalVelocity()
 	i01.head.rothead.moveTo(0)
   
 def rotateLeft():
-	normalVelocity()
 	i01.head.rothead.moveTo(180)
 
-def headDown():
-	normalVelocity()
-	i01.head.neck.moveTo(0)
+def suca():
+	i01.mouth.speak("vafanculo coglione")
 	
-def headUp():
-	normalVelocity()
-	i01.head.neck.moveTo(180)
-
-def lookUp():
-	normalVelocity()
-	i01.head.eyeX.rest()
-	i01.head.eyeY.moveTo(0)
-	
-def lookDown():
-	normalVelocity()
-	i01.head.eyeX.rest()
-	i01.head.eyeY.moveTo(180)
-
-def lookLeft():
-	normalVelocity()
-	i01.head.eyeY.rest()
-	i01.head.eyeX.moveTo(0)
-
-def lookRight():
-	normalVelocity()
-	i01.head.eyeY.rest()
-	i01.head.eyeX.moveTo(180)
-
 def openMouth():
 	i01.head.jaw.moveTo(180)
 
 def closeMouth():
 	i01.head.jaw.moveTo(0)
 
-def suca():
-	i01.mouth.speak("vafanculo coglione")
+def lookUp():
+	i01.head.eyeX.rest()
+	i01.head.eyeY.moveTo(0)
+	
+def lookDown():
+	i01.head.eyeX.rest()
+	i01.head.eyeY.moveTo(180)
+
+def lookLeft():
+	i01.head.eyeY.rest()
+	i01.head.eyeX.moveTo(0)
+
+def lookRight():
+	i01.head.eyeY.rest()
+	i01.head.eyeX.moveTo(180)
+	
+def headDown():
+	i01.head.neck.moveTo(0)
+	
+def headUp():
+	i01.head.neck.moveTo(180)
 
 def sayTime():
 	now = datetime.now()
@@ -229,42 +254,7 @@ def repeat(text):
 	cutText = text[6:]
 	i01.mouth.speak(cutText)
 
-def onRecognized(text):
-	if (text == u"riposo" or text == u"riposa"): # relax
-		relax()
-	elif (text == u"guarda a destra"): # look right
-		lookRight()
-	elif (text == u"guarda a sinistra"): # look left
-		lookLeft()
-	elif (text == u"guarda in alto" or text == u"alza lo sguardo"): # look up
-		lookUp()
-	elif (text == u"guarda in basso" or text == u"abbassa lo sguardo"): # look down
-		lookDown()
-	elif (text == u"apri la bocca"): # open mouth
-		openMouth()
-	elif (text == u"chiudi la bocca"): # close mouth
-		closeMouth()
-	elif (text == u"gira a destra" or text == u"gira la testa a destra"): # turn head right
-		rotateRight()
-	elif (text == u"gira a sinistra" or text == u"gira la testa a sinistra"): # turn head left
-		rotateLeft()
-	elif (text == u"alza la testa"): # head up
-		headUp()
-	elif (text == u"abbassa la testa"): # head down
-		headDown()
-	elif (text == u"suca"): # fuck
-		suca()
-	elif (text == u"musica"): # play music
-		startMp3()
-	elif (text == u"silenzio"): # shut up (stop playing music)
-		stopMp3()
-	elif (text == u"che ore sono"): # what time is it
-		sayTime()
-	elif (text.startswith("ripeti")): # say
-		repeat(text)
-	elif (text == u"come ti chiami"): # what's your name
-		mouth.speak("mi chiamo Querti")
-
+# JOYSTICK
 def leftStickXYListener(axis, value):
 
 	global head
@@ -341,13 +331,6 @@ def rightStickXYListener(axis, value):
 			else:
 				head.eyeY.moveTo(head.eyeY.min)
 
-# used to disable servo buzzing
-def disableServos():
-	head.rothead.disable()
-	head.neck.disable()
-	head.eyeX.disable()
-	head.eyeY.disable()
-	
 def onJoystickInput(data):
 
 	# left stick X axis
@@ -377,3 +360,17 @@ def onJoystickInput(data):
 		relax()
 
 uberjoy.addInputListener(python)
+# END JOYSTICK
+
+#	i01.setHeadVelocity(40, 40, 40)
+#	i01.moveHead(80,140,120)
+
+# i01.head.eyeY.detachPin(24)
+
+# APPUNTI
+
+#http://localhost:8888/api/service/i01.ear/publishText/silenzio
+
+#https://github.com/MyRobotLab/pyrobotlab/tree/master/home/kwatters/harry/gestures/trackHumans.py
+#i01.headTracking.pid.setPID("x", 35,1.0,0.1)
+#i01.headTracking.pid.setPID("y", 50,1.0,0.1)
