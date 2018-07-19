@@ -2,23 +2,20 @@
 # https://github.com/MyRobotLab/pyrobotlab/blob/develop/home/kwatters/joystick_manticore.py
 
 import math
-import socket
 
 #execfile('/home/scognito/dev/git/MRL/scripts/demo.py')
 #execfile('C:\Users\scognito\git\scognito\MRL\scripts\demo.py')
-#execfile('C:\dev\mrl\script\demo.py')
 
-leftPort = "COM3"
+leftPort = "COM5"
 #leftPort = "/dev/ttyACM0"
 
-joystickIndex = 3; # check the index in the joy tab once running
+joystickIndex = 2; # check the index in the joy tab once running
 
 # PIN
 pinNeck = 12
 pinRothead = 13
 pinEyeX = 22
 pinEyeY = 24
-pinJaw = 26
 
 # MIN / MAX FOR MAPPING
 rotheadMin = 30  # left
@@ -29,8 +26,6 @@ eyeXmin = 60  # left
 eyeXmax = 120 # right
 eyeYmin = 100
 eyeYmax = 140
-jawMin = 0
-jawMax = 30
 
 headVelocity = 45
 joyThreshold = 0.5
@@ -53,7 +48,6 @@ head.neck.map(0, 180, neckMin, neckMax)
 head.rothead.map(0, 180, rotheadMin, rotheadMax)
 head.eyeX.map(0, 180, eyeXmin, eyeXmax)
 head.eyeY.map(0, 180, eyeYmin, eyeYmax)
-head.jaw.map(0, 180, jawMin, jawMax)
 
 # SPEED
 head.rothead.setVelocity(headVelocity)
@@ -62,17 +56,16 @@ head.eyeX.setVelocity(headVelocity)
 head.eyeY.setVelocity(headVelocity)
 
 # SET AUTODISABLE
-head.rothead.enableAutoDisable(True);
-head.neck.enableAutoDisable(True);
-head.eyeX.enableAutoDisable(True);
-head.eyeY.enableAutoDisable(True);
+#head.rothead.setAutoDisable(True);
+#head.neck.setAutoDisable(True);
+#head.eyeX.setAutoDisable(True);
+#head.eyeY.setAutoDisable(True);
 
 i01.startHead(leftPort)
 i01.head.rothead.attach(left, pinRothead)
 i01.head.neck.attach(left, pinNeck)
 i01.head.eyeX.attach(left, pinEyeX)
 i01.head.eyeY.attach(left, pinEyeY)
-i01.head.jaw.attach(left, pinJaw)
 
 python.subscribe("i01.ear","recognized") #FIX
 ear = i01.ear
@@ -82,20 +75,6 @@ ear.startListening()
 
 i01.startMouthControl(leftPort)
 i01.mouthControl.setmouth(0, 180) # fa aprire e chiudere la bocca quando parla
-
-def apriPortaLab():
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)                 
-	s.connect(("therocks.it" , 80))
-	s.sendall("GET /door/door-lab.php HTTP/1.1\r\nHost: therocks.it\r\n\r\n")
-	print s.recv(4096)
-	s.close
-
-def apriPortaCed():
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)                 
-	s.connect(("therocks.it" , 80))
-	s.sendall("GET /door/door-ced.php HTTP/1.1\r\nHost: therocks.it\r\n\r\n")
-	print s.recv(4096)
-	s.close
 
 def leftStickXYListener(axis, value):
 
@@ -199,27 +178,14 @@ def onRecognized(text):
     # say rest
 	if (text == u"rest" or text == u"relax" or text == u"riposo"):
 		relax()
-	elif( u"apri la porta del cell" in text or u"apri il cell" in text):
-		mouth.speakBlocking("ok")
-		apriPortaCed()
-	elif( u"apri la porta" in text):
-		mouth.speakBlocking("ok")
-		apriPortaLab()
-	elif( u"ciao" in text):
+	elif(text == u"hello" or text == u"ciao"):
 		mouth.speak("ciao")
-	elif ( u"che ore sono" in text): # what time is it
+	elif (text == u"che ore sono"): # what time is it
 		sayTime()
-	elif ( u"porco dio" in text or "dio porco" in text or u"dioporco" in text  or u"porcodio" in text or u"dio cane" in text or u"diocane" in text):
-		mouth.speak("non devi bestemmiare, porcoddio")
-	#elif ( u"max" in text):
-	#	mouth.speak('porcoddio')
 	elif (text.startswith("ripeti")): # say
 		repeat(text)
-	elif (u"come ti chiami" in text): # what's your name
-		#mouth.speak("pietro porcoddio")
+	elif (text == u"come ti chiami"): # what's your name
 		mouth.speak("mi chiamo Querti")
-	elif (u"cosa fa dio" in text or u"che fa dio" in text):
-		mouth.speak("abbaia, che cazzo deve fare")
 	
 def onJoystickInput(data):
 
@@ -235,6 +201,7 @@ def onJoystickInput(data):
 	# right stick Y axis
 	if (data.id == "ry"):
 		rightStickXYListener("y", data.value)
+
 	# CIRCLE button
 	if ((data.id == '1' or data.id == 'A') and float(data.value) == 1.0):
 		disableServos()
@@ -244,5 +211,6 @@ def onJoystickInput(data):
 	# R TRIGGER
 	if ((data.id == '5' ) and float(data.value) == 1.0):
 		closeMouth()
-
+	
+		
 uberjoy.addInputListener(python)
